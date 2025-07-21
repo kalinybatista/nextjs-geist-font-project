@@ -1,0 +1,376 @@
+@page
+@model NotasFiscaisSystem.Views.Home.IndexModel
+@{
+    ViewData["Title"] = "Sistema de Declaração de Notas Fiscais";
+}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+        .status-badge {
+            font-size: 0.75rem;
+        }
+        .table-responsive {
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Sistema de Declaração de Notas Fiscais</h1>
+            <p class="mb-0 opacity-75">Gerenciamento completo de notas fiscais eletrônicas</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-file-invoice fa-2x text-primary mb-2"></i>
+                        <h5 class="card-title">Total Notas</h5>
+                        <h3 class="text-primary" id="totalNotas">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <h5 class="card-title">Autorizadas</h5>
+                        <h3 class="text-success" id="notasAutorizadas">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                        <h5 class="card-title">Pendentes</h5>
+                        <h3 class="text-warning" id="notasPendentes">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
+                        <h5 class="card-title">Canceladas</h5>
+                        <h3 class="text-danger" id="notasCanceladas">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Notas Fiscais</h5>
+                        <button class="btn btn-primary" onclick="abrirModalNovaNota()">
+                            <i class="fas fa-plus me-1"></i>Nova Nota
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Número</th>
+                                        <th>Série</th>
+                                        <th>Emitente</th>
+                                        <th>Destinatário</th>
+                                        <th>Data Emissão</th>
+                                        <th>Valor Total</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaNotas">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nova Nota -->
+    <div class="modal fade" id="modalNovaNota" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nova Nota Fiscal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNovaNota">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Número da Nota</label>
+                                    <input type="text" class="form-control" id="numeroNota" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Série</label>
+                                    <input type="text" class="form-control" id="serie" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">CNPJ Emitente</label>
+                                    <input type="text" class="form-control" id="cnpjEmitente" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Nome Emitente</label>
+                                    <input type="text" class="form-control" id="nomeEmitente" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">CNPJ Destinatário</label>
+                                    <input type="text" class="form-control" id="cnpjDestinatario" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Nome Destinatário</label>
+                                    <input type="text" class="form-control" id="nomeDestinatario" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Valor Total</label>
+                                    <input type="number" class="form-control" id="valorTotal" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Tipo Operação</label>
+                                    <select class="form-select" id="tipoOperacao" required>
+                                        <option value="">Selecione...</option>
+                                        <option value="Entrada">Entrada</option>
+                                        <option value="Saída">Saída</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Natureza Operação</label>
+                                    <input type="text" class="form-control" id="naturezaOperacao" required>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="salvarNota()">Salvar Nota</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Carregar dados ao iniciar
+        carregarDados();
+
+        async function carregarDados() {
+            try {
+                const response = await fetch('/api/notasfiscais');
+                const notas = await response.json();
+                
+                atualizarDashboard(notas);
+                atualizarTabela(notas);
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+            }
+        }
+
+        function atualizarDashboard(notas) {
+            document.getElementById('totalNotas').textContent = notas.length;
+            document.getElementById('notasAutorizadas').textContent = notas.filter(n => n.status === 'Autorizada').length;
+            document.getElementById('notasPendentes').textContent = notas.filter(n => n.status === 'Pendente').length;
+            document.getElementById('notasCanceladas').textContent = notas.filter(n => n.status === 'Cancelada').length;
+        }
+
+        function atualizarTabela(notas) {
+            const tbody = document.getElementById('tabelaNotas');
+            tbody.innerHTML = '';
+
+            notas.forEach(nota => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${nota.numeroNota}</td>
+                    <td>${nota.serie}</td>
+                    <td>${nota.nomeEmitente}</td>
+                    <td>${nota.nomeDestinatario}</td>
+                    <td>${new Date(nota.dataEmissao).toLocaleDateString('pt-BR')}</td>
+                    <td>R$ ${nota.valorTotal.toFixed(2)}</td>
+                    <td>
+                        <span class="badge status-badge ${getStatusClass(nota.status)}">${nota.status}</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="visualizarNota(${nota.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${nota.status === 'Pendente' ? `
+                            <button class="btn btn-sm btn-outline-success" onclick="autorizarNota(${nota.id})">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        ` : ''}
+                        ${nota.status === 'Autorizada' ? `
+                            <button class="btn btn-sm btn-outline-danger" onclick="cancelarNota(${nota.id})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function getStatusClass(status) {
+            switch(status) {
+                case 'Autorizada': return 'bg-success';
+                case 'Pendente': return 'bg-warning';
+                case 'Cancelada': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+
+        function abrirModalNovaNota() {
+            const modal = new bootstrap.Modal(document.getElementById('modalNovaNota'));
+            modal.show();
+        }
+
+        async function salvarNota() {
+            const nota = {
+                numeroNota: document.getElementById('numeroNota').value,
+                serie: document.getElementById('serie').value,
+                cnpjEmitente: document.getElementById('cnpjEmitente').value,
+                nomeEmitente: document.getElementById('nomeEmitente').value,
+                cnpjDestinatario: document.getElementById('cnpjDestinatario').value,
+                nomeDestinatario: document.getElementById('nomeDestinatario').value,
+                valorTotal: parseFloat(document.getElementById('valorTotal').value),
+                tipoOperacao: document.getElementById('tipoOperacao').value,
+                naturezaOperacao: document.getElementById('naturezaOperacao').value,
+                dataEmissao: new Date().toISOString(),
+                dataEntradaSaida: new Date().toISOString(),
+                chaveAcesso: 'NFE' + Date.now().toString()
+            };
+
+            try {
+                const response = await fetch('/api/notasfiscais', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(nota)
+                });
+
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalNovaNota')).hide();
+                    document.getElementById('formNovaNota').reset();
+                    carregarDados();
+                } else {
+                    alert('Erro ao salvar nota fiscal');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao salvar nota fiscal');
+            }
+        }
+
+        async function autorizarNota(id) {
+            if (confirm('Deseja autorizar esta nota fiscal?')) {
+                try {
+                    const response = await fetch(`/api/notasfiscais/${id}/autorizar`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ protocolo: 'PROT' + Date.now().toString() })
+                    });
+
+                    if (response.ok) {
+                        carregarDados();
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                }
+            }
+        }
+
+        async function cancelarNota(id) {
+            const motivo = prompt('Informe o motivo do cancelamento:');
+            if (motivo) {
+                try {
+                    const response = await fetch(`/api/notasfiscais/${id}/cancelar`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ motivo })
+                    });
+
+                    if (response.ok) {
+                        carregarDados();
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                }
+            }
+        }
+
+        function visualizarNota(id) {
+            // Implementar visualização detalhada
+            alert('Funcionalidade de visualização em desenvolvimento');
+        }
+    </script>
+</body>
+</html>
